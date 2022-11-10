@@ -15,8 +15,8 @@ extern {
 
 #[wasm_bindgen]
 pub fn genGar() -> usize {
-	let arr = vec![-1;10000000];
-    // println!("{:?}", arr);
+	let arr= vec![-1;10000000];
+    println!("{:?}", arr);
     // alert("Hello, rust-wasm!");
     return arr.len();
 }

@@ -4,10 +4,12 @@ import (
 	"syscall/js"
 )
 
+// var list [][]int32
+
 func generateGarbage(this js.Value, args []js.Value) any {
-	list := make([]interface{}, 10000000);
-	// js.Global().Set("list", js.ValueOf(list))
-	return len(list)
+	tempList := make([]int32, 10000000);
+	// list = append(list, tempList)
+	return len(tempList)
 }
 
 func main() {

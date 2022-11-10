@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -9,6 +10,7 @@
   <script src="./index.js"></script>
   <script src="./emsdk/a.out.js"></script>
 </head>
+
 <body>
   <button onClick="log(goGenGar)">go</button>
   <button onClick="log(genGar)">js</button>
@@ -18,41 +20,41 @@
   <button onClick="checkMemory()">check memory</button>
 
   <script>
+    // go
     const go = new Go();
-    Promise.all([
-      WebAssembly.instantiateStreaming(fetch("./main.wasm"), go.importObject), 
-      import('./rust-wasm/pkg/rust_wasm.js'),
-      WebAssembly.instantiateStreaming(fetch('./emsdk/indexc.wasm'), {
+    WebAssembly.instantiateStreaming(fetch("./main.wasm"), go.importObject).then(goWasmModule => {
+      go.run(goWasmModule.instance)
+    })
+    // rust
+    import('./rust-wasm/pkg/rust_wasm.js').then(async rustWasmModule => {
+      await rustWasmModule.default()
+      window.genGarForRust = rustWasmModule.genGar;
+    })
+    // c
+    WebAssembly.instantiateStreaming(fetch('./emsdk/indexc.wasm'), {
         env: {
-          memset: function(...a) {
+          memset: function (...a) {
             console.debug(a)
           },
-          memory: new WebAssembly.Memory({ initial: 1 }),
+          memory: new WebAssembly.Memory({
+            initial: 1
+          }),
           printf: function (a, b) {
             console.debug(a, b)
           },
           __memory_base: 0,
-          __stack_pointer: new WebAssembly.Global(
-            {
-                mutable: true,
-                value: 'i32',
+          __stack_pointer: new WebAssembly.Global({
+              mutable: true,
+              value: 'i32',
             },
             0x1000,
-        ),
+          ),
         }
-      }),
-    ])
-    .then(async ([goWasmModule, rustWasmModule, cWasmModule]) => {
-      go.run(goWasmModule.instance)
-      await rustWasmModule.default()
-
-      window.genGarForRust = rustWasmModule.genGar;
-      window.genGarForC = cWasmModule.instance.exports.genGarbage
-      
-      checkMemory();
-    }).catch(err => {
-      console.debug(err)
-    })
+      })
+      .then(cWasmModule => {
+        window.genGarForC = cWasmModule.instance.exports.genGarbage
+      })
+    // c - completed
     Module.onRuntimeInitialized = () => {
       window.genGarForC2 = Module.cwrap('genGarbage', null, null, null);
     };
@@ -60,9 +62,11 @@
     function checkMemory() {
       console.debug(window.performance.memory)
     }
+
     function log(fn) {
       console.debug(fn())
     }
- </script>
+  </script>
 </body>
+
 </html>

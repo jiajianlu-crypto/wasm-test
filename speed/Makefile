@@ -1,6 +1,6 @@
 all: main.wasm ./emsdk/indexc.wasm ./emsdk/indexc.wasm-2
-	npx anywhere -d . --proxy ../proxy.config.js
-main.wasm: wasm_exec.js index.go ../proxy.config.js
+	live-server
+main.wasm: wasm_exec.js index.go
 	GOOS=js GOARCH=wasm go build -ldflags="-s -w" -gcflags='-m' -o main.wasm
 wasm_exec.js:
 	cp $(shell go env GOROOT)/misc/wasm/wasm_exec.js ./
