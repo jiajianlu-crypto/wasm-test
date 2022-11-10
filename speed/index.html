@@ -7,9 +7,13 @@
   <title>web assembly</title>
   <script src="./wasm_exec.js"></script>
   <script src="./index.js"></script>
+  <script src="./emsdk/a.out.js"></script>
 </head>
 <body>
   <script>
+    const time = 30;
+    const size = 30;
+
     const go = new Go();
     let cFib
     let cFib30Times
@@ -22,14 +26,25 @@
         cFib = cWasm.instance.exports.fib
         cFib30Times = cWasm.instance.exports.cFib30Times
 
-        const time = 30;
-        const size = 30;
-        testCase(time, size)
+        testCase()
         console.debug('--------------')
         console.debug(CalcMd5('路甲减'))
       }).catch(err => {
         console.debug(err)
       })
+    Module.onRuntimeInitialized = () => {
+      const c2fib = Module.cwrap('fib', 'number', ['number']);
+      const c2Fib30Times = Module.cwrap('cFib30Times', 'number', ['number']);
+      testTime('c 完整编译', time, () => {
+        return c2fib(size)
+      })
+
+      let start = performance.now()
+      const sum1 = c2Fib30Times(size)
+      console.debug('c 完整编译，内部30次平均耗时', (performance.now() - start)/30, sum1)
+      console.debug('--------------')
+
+    };
     function testTime(title, time, cb) {
       let sum = 0;
       for (let i = 0; i < time; i++) {
@@ -39,7 +54,7 @@
       }
       console.debug(`${title}，${time}次平均耗时${sum/time}毫秒`);
     }
-    function testCase(time, size) {
+    function testCase() {
       testTime('js', time, () => {
         return fib(size)
       })
